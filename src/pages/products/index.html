@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<head>
+  <title>Админка для магазина</title>
+  <link rel="apple-touch-icon-precomposed" href="src/assets/favicon/apple-touch-icon-precomposed.png">
+  <link rel="icon" href="src/assets/favicon/favicon.png">
+  <link rel="stylesheet" href="../../styles/all.css">
+</head>
+<body>
+
+<main class="main">
+  <div class="progress-bar">
+    <div class="progress-bar__line"></div>
+  </div>
+  <aside class="sidebar">
+    <h2 class="sidebar__title">
+      <a href="/">shop admin</a>
+    </h2>
+    <ul class="sidebar__nav">
+      <li>
+        <a href="/" data-page="dashboard">
+          <i class="icon-dashboard"></i> <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="/products" data-page="products">
+          <i class="icon-products"></i> <span>Products</span>
+        </a>
+      </li>
+      <!--      TODO: uncomment later if group will have time for implementation -->
+      <!--      <li>-->
+      <!--        <a href="/categories" data-page="categories">-->
+      <!--          <i class="icon-categories"></i> <span>Categories</span>-->
+      <!--        </a>-->
+      <!--      </li>-->
+      <li>
+        <a href="/sales" data-page="sales">
+          <i class="icon-sales"></i> <span>Sales</span>
+        </a>
+      </li>
+    </ul>
+    <ul class="sidebar__nav sidebar__nav_bottom">
+      <li>
+        <button type="button" class="sidebar__toggler">
+          <i class="icon-toggle-sidebar"></i> <span>Toggle sidebar</span>
+        </button>
+      </li>
+    </ul>
+  </aside>
+
+  <section class="content" id="content">
+
+    <div class="products-list">
+      <div class="content__top-panel">
+        <h1 class="page-title">Products</h1>
+        <a href="/products/add" class="button-primary">Add product</a>
+      </div>
+      <div class="content-box content-box_small">
+        <form class="form-inline">
+          <div class="form-group">
+            <label class="form-label">Filter by:</label>
+            <input type="text" data-elem="filterName" class="form-control" placeholder="Product name">
+          </div>
+          <div class="form-group" data-elem="sliderContainer">
+            <label class="form-label">Price:</label>
+            <div class="range-slider">
+              <span data-elem="from">$0</span>
+              <div data-elem="inner" class="range-slider__inner">
+                <span data-elem="progress" class="range-slider__progress" style="left: 0%; right: 0%;"></span>
+                <span data-elem="thumbLeft" class="range-slider__thumb-left" style="left: 0%;"></span>
+                <span data-elem="thumbRight" class="range-slider__thumb-right" style="right: 0%;"></span>
+              </div>
+              <span data-elem="to">$4000</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status:</label>
+            <select class="form-control" data-elem="filterStatus">
+              <option value="" selected="">Any</option>
+              <option value="1">Enabled</option>
+              <option value="0">Disabled</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div id="product-table-root">
+        <!-- sortable-table component -->
+      </div>
+    </div>
+  </section>
+
+</main>
+<script type="module">
+   console.error('start');
+
+import ProductTable from '../../components/product-table/index.js';
+import fetchJson from '../../utils/fetch-json.js';
+
+const BACKEND_URL = 'https://course-js.javascript.ru/';
+const PRODUCTS = 'api/rest/products';
+const url = new URL(PRODUCTS, BACKEND_URL);
+
+const step = 10;
+let start = 0;
+let end = 20;
+
+const productTableRoot = document.getElementById('product-table-root');
+
+const productTable = new ProductTable({ isSortLocally: true });
+
+async function onLoad () {
+  url.searchParams.set('_start', 1);
+  url.searchParams.set('_end', 20);
+  
+  const products = await fetchJson(url);
+
+  productTable.addRows(products);
+
+  productTableRoot.append(productTable.$element);
+  
+  productTable.$element.addEventListener('load-data', async () => {
+    
+    start = end;
+    end += step;
+
+    url.searchParams.set('_start', `${start}`);
+    url.searchParams.set('_end', `${end}`);
+    
+    const products = await fetchJson(url);
+
+    productTable.addRows(products);
+
+    console.error(start, end);
+
+  });
+  
+}
+
+onLoad();
+
+</script>
+</body>

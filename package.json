@@ -1,0 +1,39 @@
+{
+  "name": "course-js-20200203",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "develop": "static-server ./src",
+    "eslint": "eslint \"**/*.js\"",
+    "server": "http-server ./src",
+    "eslint:fix": "eslint --fix \"**/*.js\"",
+    "prettier": "prettier --check \"**/*.{js,css,html,md,json}\" --write",
+    "test": "jest",
+    "test:match": "jest --findRelatedTests ./src/components/range-picker/index.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dosandk/course-js-20200203.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dosandk/course-js-20200203/issues"
+  },
+  "homepage": "https://github.com/dosandk/course-js-20200203#readme",
+  "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/preset-env": "^7.8.4",
+    "@testing-library/jest-dom": "^5.1.1",
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0",
+    "prettier-eslint": "^9.0.1",
+    "static-server": "^2.2.1"
+  },
+  "dependencies": {
+    "http-server": "^0.12.1"
+  }
+}

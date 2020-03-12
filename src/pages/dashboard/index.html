@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<head>
+  <title>Админка для магазина</title>
+  <link rel="apple-touch-icon-precomposed" href="src/assets/favicon/apple-touch-icon-precomposed.png">
+  <link rel="icon" href="src/assets/favicon/favicon.png">
+  <link rel="stylesheet" href="../../styles/all.css">
+  <link rel="stylesheet" href="../../components/tooltip/style.css">
+  <link rel="stylesheet" href="../../components/column-chart/style.css">
+  <link rel="stylesheet" href="../../components/sortable-table/style.css">
+  <link rel="stylesheet" href="../../components/range-picker/style.css">
+</head>
+<body>
+
+<main class="main">
+  <div class="progress-bar">
+    <div class="progress-bar__line"></div>
+  </div>
+  <aside class="sidebar">
+    <h2 class="sidebar__title">
+      <a href="/">shop admin</a>
+    </h2>
+    <ul class="sidebar__nav">
+      <li>
+        <a href="/" data-page="dashboard">
+          <i class="icon-dashboard"></i> <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="/products" data-page="products">
+          <i class="icon-products"></i> <span>Products</span>
+        </a>
+      </li>
+      <!--      TODO: uncomment later if group will have time for implementation -->
+      <!--      <li>-->
+      <!--        <a href="/categories" data-page="categories">-->
+      <!--          <i class="icon-categories"></i> <span>Categories</span>-->
+      <!--        </a>-->
+      <!--      </li>-->
+      <li>
+        <a href="/sales" data-page="sales">
+          <i class="icon-sales"></i> <span>Sales</span>
+        </a>
+      </li>
+    </ul>
+    <ul class="sidebar__nav sidebar__nav_bottom">
+      <li>
+        <button type="button" class="sidebar__toggler">
+          <i class="icon-toggle-sidebar"></i> <span>Toggle sidebar</span>
+        </button>
+      </li>
+    </ul>
+  </aside>
+  <section class="content" id="content">
+    <div class="dashboard">
+      <div class="content__top-panel">
+        <h2 class="page-title">Dashboard</h2>
+
+        <div id="range-picker-root">
+          <!-- range-picker component -->
+        </div>
+      </div>
+
+      <div id="charts-root" class="dashboard__charts">
+        <!-- column-chart component -->
+      </div>
+
+      <h3 class="block-title">Best sellers</h3>
+    
+      <div id="bestseller-table-root">
+        <!-- sortable-table component -->
+      </div>
+    </div>
+  </section>
+</main>
+<script type="module">
+  console.error('start');
+
+  import Tooltip from '../../components/tooltip/index.js';
+  import RangePicker  from '../../components/range-picker/index.js';
+  import ColumnChart  from '../../components/column-chart/index.js';
+  import BestsellerTable from '../../components/bestseller-table/index.js';
+  import fetchJson from '../../utils/fetch-json.js'
+
+  const BACKEND_URL = 'https://course-js.javascript.ru/';
+  const BESTSELLERS = 'api/dashboard/bestsellers';
+  const ORDERS      = 'api/dashboard/orders';
+  const SALES       = 'api/dashboard/sales';
+  const CUSTOMERS   = 'api/dashboard/customers';
+
+  const urlBestsellers  = new URL(BESTSELLERS, BACKEND_URL);
+  const urlOrders       = new URL(ORDERS, BACKEND_URL);
+  const urlSales        = new URL(SALES, BACKEND_URL);
+  const urlCustomers    = new URL(CUSTOMERS, BACKEND_URL);
+
+  const rangePickerRoot = document.getElementById('range-picker-root');
+  const columnChartRoot = document.getElementById('charts-root');
+  const bestsellerTableRoot = document.getElementById('bestseller-table-root');
+  
+  const rangeFrom = new Date(2020, 1, 1);
+  const rangeTo = new Date(2020, 1, 8);
+
+  const positionsBestsellers = 10;
+  
+  const rangePicker = new RangePicker({
+    from: rangeFrom,
+    to: rangeTo,
+  })
+
+  const ordersColumnChart = new ColumnChart([], {
+    label: 'orders',
+    value: 0,
+    link: '#'
+  });
+  
+  const salesColumnChart = new ColumnChart([], {
+    label: 'sales',
+    value: '$0'
+  });
+
+  const customerColumnChart = new ColumnChart([], {
+    label: 'customers',
+    value: 0
+  });
+
+  const bestsellerTable = new BestsellerTable({ isSortLocally: true });
+
+  rangePickerRoot.append(rangePicker.$element);
+
+  ordersColumnChart.$element.classList.add('dashboard__chart_orders');
+  columnChartRoot.append(ordersColumnChart.$element);
+
+  salesColumnChart.$element.classList.add('dashboard__chart_sales');
+  columnChartRoot.append(salesColumnChart.$element);
+  
+  customerColumnChart.$element.classList.add('dashboard__chart_orders');
+  columnChartRoot.append(customerColumnChart.$element);
+
+  bestsellerTableRoot.append(bestsellerTable.$element);
+
+  async function onLoad () {
+    urlBestsellers.searchParams.set('_start', 1);
+    urlBestsellers.searchParams.set('_end', positionsBestsellers);
+    
+    const bestsellers = await fetchJson(urlBestsellers);
+
+    bestsellerTable.addRows(bestsellers);
+
+    bestsellerTableRoot.append(bestsellerTable.$element);
+    
+    chartsUpdate(rangeFrom, rangeTo);
+
+    rangePicker.$element.addEventListener('date-select', async range => {
+
+      chartsUpdate(range.detail.from, range.detail.to)
+
+    });
+
+    function normalizeData (orders) {
+        const nArr = [];
+
+        const maxValue = Math.max(...Object.values(orders));
+
+        let sum = Object.entries(orders).reduce((accum, item) => {
+          item.push(Math.floor(item[1]/maxValue * 50));
+          nArr.push(item);
+          return accum += item[1];
+        },0);
+
+        return [sum, nArr];
+      }
+
+    async function chartsUpdate(from, to) {
+      urlOrders.searchParams.set('from', `${from.toISOString()}`);
+      urlOrders.searchParams.set('to', `${to.toISOString()}`);
+      urlSales.searchParams.set('from', `${from.toISOString()}`);
+      urlSales.searchParams.set('to', `${to.toISOString()}`);
+      urlCustomers.searchParams.set('from', `${from.toISOString()}`);
+      urlCustomers.searchParams.set('to', `${to.toISOString()}`);
+
+      const orders = await fetchJson(urlOrders);
+      const sales = await fetchJson(urlSales);
+      const customers = await fetchJson(urlCustomers);
+
+      const normOrders = normalizeData(orders);
+      const normSales = normalizeData(sales);
+      const normCustomers = normalizeData(customers);
+
+      ordersColumnChart.updateData (normOrders[0], normOrders[1]);
+      salesColumnChart.updateData ('$' + normSales[0], normSales[1]);
+      customerColumnChart.updateData (normCustomers[0], normCustomers[1]);      
+    }
+    
+  }    
+ 
+  onLoad();
+
+  new Tooltip();
+
+  const toggle = document.querySelector('.sidebar__toggler');
+
+  toggle.addEventListener('pointerdown', () => {
+    document.body.classList.contains('is-collapsed-sidebar') ? 
+      document.body.classList.remove('is-collapsed-sidebar') :
+      document.body.classList.add('is-collapsed-sidebar');
+  })
+
+
+
+</script>
+</body>
