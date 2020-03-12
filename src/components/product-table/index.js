@@ -43,7 +43,13 @@ export const header = [
     id: 'status',
     title: 'Status',
     sortable: true,
-    sortType: 'number'
+    sortType: 'number',
+    template: data => {
+      const title = data ? "Enable" : 'Disable';
+      return `
+        <div class="sortable-table__cell">${title}</div>
+      `;
+    } 
   },  
 ];
 
